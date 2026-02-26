@@ -1,0 +1,20 @@
+{
+  "name": "kaspar-hauser-bot",
+  "version": "1.0.0",
+  "description": "Kaspar Bot Live Version mit Claude API auf Vercel",
+  "main": "api/chat.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'"
+  },
+  "keywords": [
+    "kaspar",
+    "hauser",
+    "claude",
+    "ai",
+    "chatbot",
+    "vercel"
+  ],
+  "author": "Anjelic",
+  "license": "MIT"
+}
