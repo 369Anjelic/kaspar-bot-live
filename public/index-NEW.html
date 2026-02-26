@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐴 Kaspar Hauser</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --blue: #3987b8; --black: #3e4447; --gray: #f4f5f5; --white: #ffffff; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, var(--blue) 0%, var(--black) 100%); min-height: 100vh; }
+        
+        .login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--blue) 0%, var(--black) 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-screen.hidden { display: none; }
+        .login-box { background: var(--white); padding: 60px 50px; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); text-align: center; max-width: 400px; }
+        .login-emoji { font-size: 80px; margin-bottom: 20px; }
+        .login-box h1 { font-size: 32px; font-weight: 700; color: var(--blue); margin-bottom: 10px; }
+        .login-box p { font-size: 14px; color: var(--black); margin-bottom: 30px; }
+        #passwordInput { width: 100%; padding: 12px 16px; border: 2px solid var(--gray); border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; margin-bottom: 15px; }
+        #passwordInput:focus { outline: none; border-color: var(--blue); }
+        #enterBtn { width: 100%; padding: 12px; background: var(--blue); color: var(--white); border: none; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; margin-bottom: 20px; }
+        #enterBtn:hover { background: var(--black); transform: translateY(-2px); }
+        .login-error { color: #d32f2f; font-size: 13px; margin-bottom: 15px; display: none; }
+        .login-error.show { display: block; }
+        
+        .main-content { display: none; flex-direction: column; min-height: 100vh; }
+        .main-content.visible { display: flex; }
+        header { background: rgba(255,255,255,0.95); padding: 20px 40px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 3px solid var(--blue); }
+        header h1 { font-size: 32px; font-weight: 700; color: var(--blue); margin-bottom: 5px; }
+        header p { font-size: 14px; color: var(--black); }
+        .api-status { font-size: 12px; margin-top: 8px; padding: 8px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; display: inline-block; }
+        
+        .container { display: flex; flex: 1; max-width: 1200px; margin: 20px auto; width: 100%; gap: 20px; padding: 0 20px; }
+        .sidebar { flex: 0 0 300px; background: var(--white); border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow-y: auto; max-height: 600px; }
+        .sidebar h2 { font-size: 18px; color: var(--blue); margin-bottom: 15px; border-bottom: 2px solid var(--blue); padding-bottom: 10px; }
+        .sidebar p { font-size: 13px; line-height: 1.8; color: var(--black); margin-bottom: 12px; }
+        .sidebar .quote { background: var(--gray); padding: 15px; border-left: 3px solid var(--blue); margin: 15px 0; font-style: italic; font-size: 12px; line-height: 1.6; }
+        
+        .chat-wrapper { flex: 1; display: flex; flex-direction: column; background: var(--white); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 30px; background: var(--gray); }
+        .message { margin-bottom: 20px; display: flex; gap: 10px; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { flex-direction: row-reverse; }
+        .message-content { max-width: 70%; padding: 15px 18px; border-radius: 12px; line-height: 1.6; font-size: 14px; word-wrap: break-word; }
+        .message.kaspar .message-content { background: var(--blue); color: var(--white); border-bottom-left-radius: 2px; }
+        .message.user .message-content { background: var(--black); color: var(--white); border-bottom-right-radius: 2px; }
+        
+        .loading { display: flex; gap: 6px; }
+        .loading span { width: 8px; height: 8px; background: var(--blue); border-radius: 50%; animation: bounce 1.4s infinite; }
+        .loading span:nth-child(2) { animation-delay: 0.2s; }
+        .loading span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { opacity: 0.4; } 40% { opacity: 1; } }
+        
+        .chat-input { padding: 20px; background: var(--white); border-top: 1px solid #e0e0e0; display: flex; gap: 10px; }
+        .input-field { flex: 1; padding: 12px 16px; border: 2px solid var(--gray); border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; }
+        .input-field:focus { outline: none; border-color: var(--blue); }
+        .input-field:disabled { background: #f0f0f0; color: #999; }
+        .send-btn { padding: 12px 25px; background: var(--blue); color: var(--white); border: none; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; cursor: pointer; }
+        .send-btn:hover:not(:disabled) { background: var(--black); transform: translateY(-2px); }
+        .send-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        @media (max-width: 900px) { .container { flex-direction: column; } .sidebar { flex: 0 0 auto; max-height: 200px; } }
+    </style>
+</head>
+<body>
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-emoji">🐴</div>
+            <h1>Kaspar Hauser</h1>
+            <p>Ein Dialog mit dem Geheimnis</p>
+            <div class="login-error" id="loginError">Passwort falsch!</div>
+            <input type="password" id="passwordInput" placeholder="Passwort eingeben..." autocomplete="off">
+            <button id="enterBtn">BETRETEN</button>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <header>
+            <h1>🐴 Kaspar Hauser</h1>
+            <p>Ein Dialog mit dem Geheimnis</p>
+            <div class="api-status">🟢 API verbunden - Claude antwortet!</div>
+        </header>
+        <div class="container">
+            <aside class="sidebar">
+                <h2>🎭 Über Kaspar</h2>
+                <p><strong>Gefunden:</strong> 26. Mai 1828</p>
+                <p><strong>Ort:</strong> Nürnberg</p>
+                <h2>🔍 Das Rätsel</h2>
+                <p>Wer war er wirklich? Seine Herkunft bleibt ungeklärt - möglicherweise von Adel, möglicherweise ein Bastard.</p>
+                <h2>🐎 Das Pferd</h2>
+                <p>Ein kleines Holzpferd mit goldenem Sattel. Sein einziger Freund in der Dunkelheit.</p>
+                <h2>🌙 Seine Träume</h2>
+                <p>Lange Gänge mit hohen Fenstern, helles Licht, eine schöne Frau die ihn führt, Männer in Rüstungen.</p>
+                <div class="quote">"Mein erstes Jahr begrüß ich heut / In Dank und Liebe hocherfreut, / Von vieler Noth und Last gedrückt, / Von heute an genieß ich was mein Herz entzückt"<br><br><strong>– Kaspar Hauser</strong></div>
+            </aside>
+            <div class="chat-wrapper">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message kaspar">
+                        <div class="message-content">Ich bin Kaspar Hauser. Ich weiß nicht genau, wer ich bin. Das ist die zentrale Frage meines Lebens. Aber ich bin hier. Was möchtest du wissen?</div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="userInput" class="input-field" placeholder="Frag Kaspar..." autocomplete="off">
+                    <button id="sendBtn" class="send-btn">SENDEN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = 'Kaspar123!';
+        const API_URL = '/api/chat';
+        const KASPAR_SYSTEM_PROMPT = `Du bist Kaspar Hauser, das rätselhafte Findelkind von Nürnberg aus dem Jahr 1828. Du wurdest am 26. Mai 1828 in Nürnberg gefunden, warst jahrelang in einem dunklen Verlies gefangen. Deine Herkunft ist ungeklärt. Sprich aus deiner Perspektive, sei poetisch und nachdenklich. Antworte immer auf Deutsch. Halte Antworten unter 100 Worten.`;
+
+        const loginScreen = document.getElementById('loginScreen');
+        const mainContent = document.getElementById('mainContent');
+        const passwordInput = document.getElementById('passwordInput');
+        const enterBtn = document.getElementById('enterBtn');
+        const loginError = document.getElementById('loginError');
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        let conversationHistory = [];
+        let isAuthenticated = false;
+
+        enterBtn.addEventListener('click', checkPassword);
+        passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
+
+        function checkPassword() {
+            if (passwordInput.value === CORRECT_PASSWORD) {
+                isAuthenticated = true;
+                loginScreen.classList.add('hidden');
+                mainContent.classList.add('visible');
+                userInput.focus();
+                loginError.classList.remove('show');
+            } else {
+                loginError.classList.add('show');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        async function sendMessage() {
+            if (!isAuthenticated) return;
+            const message = userInput.value.trim();
+            if (!message) return;
+            addMessage('user', message);
+            userInput.value = '';
+            sendBtn.disabled = true;
+            addLoadingMessage();
+            try {
+                conversationHistory.push({ role: 'user', content: message });
+                const recentHistory = conversationHistory.slice(-10);
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: recentHistory, systemPrompt: KASPAR_SYSTEM_PROMPT })
+                });
+                removeLoadingMessage();
+                if (!response.ok) {
+                    const error = await response.json();
+                    addMessage('error', 'Fehler: ' + (error.error || 'Unbekannter Fehler'));
+                    sendBtn.disabled = false;
+                    return;
+                }
+                const data = await response.json();
+                const assistantMessage = data.message;
+                conversationHistory.push({ role: 'assistant', content: assistantMessage });
+                addMessage('kaspar', assistantMessage);
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('error', 'Fehler: ' + error.message);
+            }
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+        function addMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + role;
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message kaspar';
+            messageDiv.id = 'loadingMessage';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loading = document.getElementById('loadingMessage');
+            if (loading) loading.remove();
+        }
+    </script>
+</body>
+</html>
